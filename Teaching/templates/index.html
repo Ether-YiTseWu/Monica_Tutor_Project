@@ -8,10 +8,84 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 
-    <title>Hello, world!</title>
+    <title>全域變數解析神器</title>
   </head>
   <body>
-    <h1>Hello, world!</h1>
+
+    <h1>全域變數解析神器</h1>
+    <hr>
+    <form id="form" enctype="multipart/form-data" action="/upload" method="POST">
+      <input type="file" name="fileName" accept=".zip">
+      Token : <input type="text" name="token"> &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp
+      <button type="button" onclick="processFormData()">解析</button>
+    </form>
+
+    <script>
+
+      function processFormData() 
+      {
+        let formData = new FormData(document.getElementById('form'));
+        let fileName = formData.get('fileName');
+        let token = formData.get('token');
+
+        if (fileName != "" && token != "") 
+        {
+          // Step 1 : Check TOKEN
+          let url_checkToken = "http://192.168.0.114:11111/CheckToken/" + token
+          let xhr = new XMLHttpRequest();
+          xhr.open('GET', url_checkToken, false);
+          xhr.send(null);
+          var response = xhr.responseText;
+
+          // Step 2 : Upload file to RPi
+          if (response == "PASS")
+          {
+            var fileData = new FormData(document.getElementById('form'));
+            fileData.append('file', fileData.get('fileName'), fileData.get('fileName').name);
+            fetch("/UploadFile", {method: 'POST', body: fileData})
+
+            // Step 3 : Check Program is uploaded
+            let flag = true
+            while(flag)
+            {
+              let url_checkToken = "http://192.168.0.114:11111/CheckFileUploaded/" + fileData.get('fileName').name
+              let xhr = new XMLHttpRequest();
+              xhr.open('GET', url_checkToken, false);
+              xhr.send(null);
+              response = xhr.responseText;
+
+              if (response == "PASS")
+              {
+                flag = false;
+              }
+            }
+
+            // Step 4 : Parse Program and get result
+            let url_parseData = "http://192.168.0.114:11111/ParseProgram/" + token + "&" + fileData.get('fileName').name
+            let xhr = new XMLHttpRequest();
+            xhr.open('GET', url_parseData, false);
+            xhr.send(null);
+            response = xhr.responseText;
+
+            // Step 5 : get file
+            var link = document.createElement('a');
+            link.download = 'report.csv';
+            var blob = new Blob([response], {type: 'text/plain'});
+            link.href = window.URL.createObjectURL(blob);
+            link.click();
+
+            if (response == "FAIL")
+            {
+              alert("不含C語言程式 || 解析失敗")
+            }  
+          }
+          else
+          {
+            alert("不存在該 Token")
+          }
+        }
+      }
+    </script>
 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
