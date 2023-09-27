@@ -15,12 +15,42 @@
     <h1>全域變數解析神器</h1>
     <hr>
     <form id="form" enctype="multipart/form-data" action="/upload" method="POST">
+      Email : <input type="text" id="email"> &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp
+      <button type="button" onclick="getToken()">產生 Token</button> <br> <br>
       <input type="file" name="fileName" accept=".zip">
       Token : <input type="text" name="token"> &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp
       <button type="button" onclick="processFormData()">解析</button>
     </form>
 
     <script>
+      function getToken()
+      {
+        let email = document.getElementById('email').value;
+        if (email != "")
+        {
+          let url_parseData = "http://192.168.0.114:11111/CreateToken/" + email
+          let xhr = new XMLHttpRequest();
+          xhr.open('GET', url_parseData, false);
+          xhr.send(null);
+          response = xhr.responseText;
+          if (response == "1")
+          {
+            alert("資料庫連接異常")
+          }
+          else if (response == "2")
+          {
+            alert("你的 Email 已經產生過 Token 了")
+          }
+          else if (response == "3")
+          {
+            alert("不存在該 Email")
+          }
+          else
+          {
+            alert("你的 Token 是 " + response + "，該 Token 只會發放一次，請記下它")
+          }
+        }
+      } 
 
       function processFormData() 
       {
@@ -57,6 +87,11 @@
               if (response == "PASS")
               {
                 flag = false;
+              }
+              else if (response == "FAIL")
+              {
+                alert("上傳異常")
+                return;
               }
             }
 

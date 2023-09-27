@@ -18,20 +18,22 @@ def indexHTML():
 
 @app.route("/CreateToken/<EMAIL>")
 def createToken(EMAIL):
-    if validate_email(EMAIL):
-        if EMAIL not in dS.getEmailList():
-            token = dP.getToken()
-            timestamp = time.time_ns()
-            if (dS.insertData("tokenDataSet", timestamp, EMAIL, token, None, None)):
-                return token
+    try :
+        if validate_email(EMAIL):
+            if EMAIL not in dS.getEmailList():
+                token = dP.getToken()
+                timestamp = time.time_ns()
+                try:
+                    if (dS.insertData("tokenDataSet", timestamp, EMAIL, token, None, None)):
+                        return token
+                except:
+                    return "1"
             else:
-                return "Can't insert data into table"
-        else:
-            return "Email is duplicate"
-    else:
-        return "Email is invalid"
+                return "2"
+    except:
+        return "3"
 
-# TEST TOKEN : 3ThjYRWj308jatUXmNlu
+# TEST TOKEN : 3ThjYRWj308jatUXmNlu、LqizQp2X0kX6sFjCqg6x、YloWLBOCB0yf50e05FfW
 @app.route("/CheckToken/<TOKEN>", methods=['GET'])
 def checkToken(TOKEN):
     if TOKEN in dS.getTokenList():
@@ -46,11 +48,14 @@ def checkFileUploaded(FILENAME):
 @app.route("/UploadFile", methods=['GET', 'POST'])
 def uploadFile():
     if request.method == 'POST':
-        file = request.files['file']
-        if file and dP.allowedFile(file.filename):
-            filename = secure_filename(file.filename)
-            file.save("./UPLOAD/{}".format(filename))
-            return "PASS"
+        try:
+            file = request.files['file']
+            if file and dP.allowedFile(file.filename):
+                filename = secure_filename(file.filename)
+                file.save("./UPLOAD/{}".format(filename))
+                return "PASS"
+        except:
+            return "FAIL"
     else:
         return "Not POST method"
     
